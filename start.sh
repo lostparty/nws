@@ -15,7 +15,7 @@ nohup ./web >web.log 2>&1 &
 sleep 2  # 等待 web 服务真正启动。
 
 # 启动 Node.js 应用
-node /usr/src/app/index.js &
+node /app/index.js &
 
 # 保持容器运行
 tail -f /dev/null
