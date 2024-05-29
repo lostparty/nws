@@ -1,37 +1,36 @@
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-
 const app = express();
-const PORT = 3000;
-const XRAY_TARGET = 'http://127.0.0.1:8443';  // XRAY服务的地址
+const port = 3000;
 
-// 使用createProxyMiddleware将所有请求转发到XRAY服务
-app.use(
-  '/',
-  createProxyMiddleware({
-    target: XRAY_TARGET,
-    ws: true,  // 是否代理WebSocket
-    changeOrigin: true,  // 是否需要改变原始主机头为目标URL
-    pathRewrite: {
-      '^/': '/',  // 去除请求中的斜线号
-    },
-    on: {
-      proxyRes: (proxyRes, req, res) => {  // 处理代理请求响应
-        console.log('RAW Response from the target:', JSON.stringify(proxyRes.headers, null, 2));  // for debug
-      },
-      proxyReq: (proxyReq, req, res) => {  // 处理代理请求发出
-        console.log('Proxy Request Headers:', JSON.stringify(proxyReq.getHeaders(), null, 2));  // for debug
-      },
-      error: (err, req, res) => {  // 处理异常
-        console.error('Proxy error:', err);
-        res.status(500).send('Proxy error');
-      }
-    },
-    logLevel: 'debug',  // 设置日志级别为'debug'以输出详细日志
-  })
-);
-
-app.listen(PORT, () => {
-  console.log(`HTTP server running on port ${PORT}`);
-  console.log(`Forwarding requests to XRAY service at ${XRAY_TARGET}`);
+// 在根路径返回 Hello World
+app.get('/', (req, res) => {
+  res.send('Hello World');
 });
+
+// 代理设置
+const options = {
+  target: 'http://localhost:8443', // 目标服务器
+  changeOrigin: true,              // 修改请求头中的Host为目标服务器
+  ws: true,                        // 启用WebSocket代理
+  pathRewrite: {
+    '^/': '/ray272449844', // 可选：重写路径，例如/api -> /
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    // 在代理请求发送到目标服务器之前执行一些操作
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    // 在代理响应返回给客户端之前执行一些操作
+  },
+  onError: (err, req, res) => {
+    res.status(500).json({ error: 'Proxy error', details: err });
+  }
+};
+
+// 应用代理中间件，除了根路径外的其他请求
+app.use(createProxyMiddleware((pathname, req) => pathname !== '/', options));
+
+app.listen(port, () => {
+  console.log(`Proxy server listening at http://localhost:${port}`);
+});
+
