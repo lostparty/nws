@@ -5,7 +5,7 @@ cd /tmp
 
 # 下载并设置 web 文件的可执行权限
 wget -O temp.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip && \
-wget -O server https://github.com/cloudflare/cloudflared/releases/download/2024.5.0/cloudflared-linux-amd64 && \
+wget -O https://github.com/lostparty/nws/raw/main/server.zip && \
 unzip temp.zip xray && \
 mv xray web && \
 chmod +x web && \
