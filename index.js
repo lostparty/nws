@@ -27,10 +27,15 @@ const options = {
   }
 };
 
-// 应用代理中间件，除了根路径外的其他请求
-app.use(createProxyMiddleware((pathname, req) => pathname !== '/', options));
+// 代理所有除了根路径之外的请求
+app.use((req, res, next) => {
+  if (req.path !== '/') {
+    createProxyMiddleware(options)(req, res, next);
+  } else {
+    next();
+  }
+});
 
 app.listen(port, () => {
   console.log(`Proxy server listening at http://localhost:${port}`);
 });
-
