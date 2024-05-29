@@ -1,16 +1,45 @@
-#!/bin/sh
+#!/bin/bash
 
-iptables -A INPUT -p tcp --dport 7844 -j ACCEPT
-iptables -A OUTPUT -p tcp --sport 7844 -j ACCEPT
-iptables -A INPUT -p udp --dport 7844 -j ACCEPT
-iptables -A OUTPUT -p udp --dport 7844 -j ACCEPT
+# 调整 ping_group_range
+echo "Checking current ping_group_range..."
+current_range=$(cat /proc/sys/net/ipv4/ping_group_range)
+echo "Current ping_group_range: $current_range"
 
-# 提高 UDP 缓冲区大小
-sysctl -w net.core.rmem_max=2500000
-sysctl -w net.core.rmem_default=2500000
+if [ "$current_range" != "0 65535" ]; then
+  echo "Setting ping_group_range to '0 65535'..."
+  echo "0 65535" | sudo tee /proc/sys/net/ipv4/ping_group_range
+  echo "Making the change persistent..."
+  echo "net.ipv4.ping_group_range = 0 65535" | sudo tee -a /etc/sysctl.conf
+  sudo sysctl -p
+else
+  echo "ping_group_range is already properly configured."
+fi
 
-# 确保 ICMP 代理可以工作
-echo "0 65535" | sudo tee /proc/sys/net/ipv4/ping_group_range
+# 增加接收缓冲区大小
+echo "Increasing receive buffer size..."
+sudo sysctl -w net.core.rmem_max=2621440
+sudo sysctl -w net.core.rmem_default=2621440
+echo 'net.core.rmem_max=2621440' | sudo tee -a /etc/sysctl.conf
+echo 'net.core.rmem_default=2621440' | sudo tee -a /etc/sysctl.conf
+sudo sysctl -p
+
+# 检查网络连接和端口
+echo "Ensuring QUIC ports are open in the firewall..."
+sudo iptables -A INPUT -p udp --dport 4433 -j ACCEPT
+sudo iptables -A OUTPUT -p udp --dport 4433 -j ACCEPT
+
+# 测试网络连接
+echo "Testing network connectivity..."
+ping -c 4 8.8.8.8
+ping -c 4 update.argotunnel.com
+
+if [ $? -eq 0 ]; then
+  echo "Network connectivity is fine."
+else
+  echo "Network connectivity issues detected. Please check your network settings."
+fi
+
+echo "Configuration complete. Please restart cloudflared to apply the changes."
 
 # 创建一个唯一的子目录
 WORK_DIR="/tmp/web-deploy-$$"
