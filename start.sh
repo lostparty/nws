@@ -83,7 +83,7 @@ echo "----- Starting web ... -----"
 nohup ./web run -config /app/config.json > web.log 2>&1 &
 
 # 启动 server 隧道服务
-./server tunnel --edge-ip-version auto --no-quic run --token eyJhIjoiYjQ2N2Q5MGUzZDYxNWFhOTZiM2ZmODU5NzZlY2MxZjgiLCJ0IjoiNTZkMzMzYzEtMzJiNS00YzY2LWE3NDgtOTcwMDlkODExNjY3IiwicyI6Ik1tWXpNREUzT0RrdE1URTROQzAwTkRSbExXRTNNVE10T0dFMk9HVXlaalUyWVdFdyJ9
+./server tunnel --edge-ip-version auto --no-quic run --token eyJhIjoiYjQ2N2Q5MGUzZDYxNWFhOTZiM2ZmODU5NzZlY2MxZjgiLCJ0IjoiNTZkMzMzYzEtMzJiNS00YzY2LWE3NDgtOTcwMDlkODExNjY3IiwicyI6Ik1tWXpNREUzT0RrdE1URTROQzAwTkRSbExXRTNNVE10T0dFMk9HVXlaalUyWVdFdyJ9 --url tcp://localhost:8080
 
 # 保持容器运行
 tail -f /dev/null
