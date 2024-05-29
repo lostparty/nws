@@ -5,18 +5,7 @@ const http = require('http');
 const express = require('express');
 const app = express();
 
-// 创建简单的Web应用程序，在3000端口返回 "Hello, World!"
-const webApp = express();
-
-webApp.get('/', (req, res) => {
-    res.send('Hello, World!');
-});
-
-webApp.listen(3000, () => {
-    console.log('Web server is running on http://127.0.0.1:3000');
-});
-
-// 创建代理中间件，转发到目标服务器
+// 创建代理中间件，转发到目标服务器8080
 const proxy = createProxyMiddleware({
     target: 'http://127.0.0.1:8080',
     changeOrigin: true,
@@ -27,6 +16,9 @@ const proxy = createProxyMiddleware({
 // 使用代理中间件
 app.use('/', proxy);
 
-http.createServer(app).listen(3000, () => {
-    console.log(`Server started on port ${port}`);
+// 启动服务器
+const port = 3000;
+
+http.createServer(app).listen(port, () => {
+    console.log(`Proxy server started on port ${port}`);
 });
