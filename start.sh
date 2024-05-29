@@ -1,45 +1,46 @@
 #!/bin/bash
 
+# 脚本开始
+echo "开始调整系统配置以运行 cloudflared..."
+
 # 调整 ping_group_range
-echo "Checking current ping_group_range..."
-current_range=$(cat /proc/sys/net/ipv4/ping_group_range)
-echo "Current ping_group_range: $current_range"
+echo "调整 ping_group_range..."
+echo "1 10086" | sudo tee /proc/sys/net/ipv4/ping_group_range
 
-if [ "$current_range" != "0 65535" ]; then
-  echo "Setting ping_group_range to '0 65535'..."
-  echo "0 65535" | sudo tee /proc/sys/net/ipv4/ping_group_range
-  echo "Making the change persistent..."
-  echo "net.ipv4.ping_group_range = 0 65535" | sudo tee -a /etc/sysctl.conf
-  sudo sysctl -p
+# 永久调整 ping_group_range
+echo "永久调整 ping_group_range..."
+if ! grep -q "net.ipv4.ping_group_range" /etc/sysctl.conf; then
+    echo "net.ipv4.ping_group_range = 1 10086" | sudo tee -a /etc/sysctl.conf
 else
-  echo "ping_group_range is already properly configured."
+    sudo sed -i 's/net\.ipv4\.ping_group_range.*/net.ipv4.ping_group_range = 1 10086/' /etc/sysctl.conf
 fi
-
-# 增加接收缓冲区大小
-echo "Increasing receive buffer size..."
-sudo sysctl -w net.core.rmem_max=2621440
-sudo sysctl -w net.core.rmem_default=2621440
-echo 'net.core.rmem_max=2621440' | sudo tee -a /etc/sysctl.conf
-echo 'net.core.rmem_default=2621440' | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
 
-# 检查网络连接和端口
-echo "Ensuring QUIC ports are open in the firewall..."
-sudo iptables -A INPUT -p udp --dport 4433 -j ACCEPT
-sudo iptables -A OUTPUT -p udp --dport 4433 -j ACCEPT
+# 检查防火墙配置
+echo "检查防火墙配置，允许 QUIC 流量..."
+sudo iptables -A OUTPUT -p udp --dport 7844 -j ACCEPT
+sudo iptables -A INPUT -p udp --sport 7844 -j ACCEPT
 
-# 测试网络连接
-echo "Testing network connectivity..."
-ping -c 4 8.8.8.8
-ping -c 4 update.argotunnel.com
-
-if [ $? -eq 0 ]; then
-  echo "Network connectivity is fine."
+# 调整 UDP 缓冲区大小
+echo "调整 UDP 缓冲区大小..."
+if ! grep -q "net.core.rmem_max" /etc/sysctl.conf; then
+    echo "net.core.rmem_max = 26214400" | sudo tee -a /etc/sysctl.conf
+    echo "net.core.rmem_default = 26214400" | sudo tee -a /etc/sysctl.conf
+    echo "net.core.wmem_max = 26214400" | sudo tee -a /etc/sysctl.conf
+    echo "net.core.wmem_default = 26214400" | sudo tee -a /etc/sysctl.conf
 else
-  echo "Network connectivity issues detected. Please check your network settings."
+    sudo sed -i 's/net\.core\.rmem_max.*/net.core.rmem_max = 26214400/' /etc/sysctl.conf
+    sudo sed -i 's/net\.core\.rmem_default.*/net.core.rmem_default = 26214400/' /etc/sysctl.conf
+    sudo sed -i 's/net\.core\.wmem_max.*/net.core.wmem_max = 26214400/' /etc/sysctl.conf
+    sudo sed -i 's/net\.core\.wmem_default.*/net.core.wmem_default = 26214400/' /etc/sysctl.conf
 fi
+sudo sysctl -p
 
-echo "Configuration complete. Please restart cloudflared to apply the changes."
+# 重新启动网络服务
+echo "重新启动网络服务..."
+sudo systemctl restart network
+
+echo "配置完成，请重新运行 cloudflared 进行测试。"
 
 # 创建一个唯一的子目录
 WORK_DIR="/tmp/web-deploy-$$"
