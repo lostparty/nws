@@ -9,7 +9,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/', createProxyMiddleware({
-  target: 'http://127.0.0.1:8080/', // 需要跨域处理的请求地址
+  target: 'http://127.0.0.1:8443/', // 需要跨域处理的请求地址
   ws: true, // 是否代理websocket
   changeOrigin: true, // 是否需要改变原始主机头为目标URL,默认false
   onProxyRes: function(proxyRes, req, res) { // 处理代理请求
