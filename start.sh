@@ -1,5 +1,8 @@
 #!/bin/sh
 
+iptables -A INPUT -p tcp --dport 7844 -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 7844 -j ACCEPT
+
 # 提高 UDP 缓冲区大小
 sysctl -w net.core.rmem_max=2500000
 sysctl -w net.core.rmem_default=2500000
