@@ -2,13 +2,15 @@
 
 iptables -A INPUT -p tcp --dport 7844 -j ACCEPT
 iptables -A OUTPUT -p tcp --sport 7844 -j ACCEPT
+iptables -A INPUT -p udp --dport 7844 -j ACCEPT
+iptables -A OUTPUT -p udp --dport 7844 -j ACCEPT
 
 # 提高 UDP 缓冲区大小
 sysctl -w net.core.rmem_max=2500000
 sysctl -w net.core.rmem_default=2500000
 
 # 确保 ICMP 代理可以工作
-echo "0 2147483647" > /proc/sys/net/ipv4/ping_group_range
+echo "0 65535" | sudo tee /proc/sys/net/ipv4/ping_group_range
 
 # 创建一个唯一的子目录
 WORK_DIR="/tmp/web-deploy-$$"
