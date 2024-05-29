@@ -1,15 +1,22 @@
 {
-  "name": "websocket-proxy",
+  "name": "proxy-web-app",
   "version": "1.0.0",
-  "description": "A WebSocket proxy server for TCP connections",
+  "description": "A web application with HTTP, WebSocket proxy functionality using Express.js and http-proxy-middleware",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
+  "keywords": [
+    "express",
+    "proxy",
+    "http",
+    "websocket",
+    "middleware"
+  ],
+  "author": "Your Name",
+  "license": "ISC",
   "dependencies": {
-    "ws": "^8.5.1",
-    "download": "^8.0.0",
-    "axios": "^0.24.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "http-proxy-middleware": "^2.0.0"
   }
 }
