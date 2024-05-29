@@ -12,6 +12,9 @@ USER root
 # 复制本地文件到容器
 COPY . .
 
+# 为脚本设置可执行权限
+RUN chmod +x start.sh
+
 # 安装依赖包及清理缓存
 RUN apt-get update && \
     apt-get -y upgrade && \
