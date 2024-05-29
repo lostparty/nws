@@ -5,21 +5,31 @@ echo "开始调整系统配置以运行 cloudflared..."
 
 # 调整 ping_group_range
 echo "调整 ping_group_range..."
-echo "1 10086" | sudo tee /proc/sys/net/ipv4/ping_group_range
+echo "1 20000" | sudo tee /proc/sys/net/ipv4/ping_group_range
 
 # 永久调整 ping_group_range
 echo "永久调整 ping_group_range..."
 if ! grep -q "net.ipv4.ping_group_range" /etc/sysctl.conf; then
-    echo "net.ipv4.ping_group_range = 1 10086" | sudo tee -a /etc/sysctl.conf
+    echo "net.ipv4.ping_group_range = 1 20000" | sudo tee -a /etc/sysctl.conf
 else
-    sudo sed -i 's/net\.ipv4\.ping_group_range.*/net.ipv4.ping_group_range = 1 10086/' /etc/sysctl.conf
+    sudo sed -i 's/net\.ipv4\.ping_group_range.*/net.ipv4.ping_group_range = 1 20000/' /etc/sysctl.conf
 fi
 sudo sysctl -p
 
 # 检查防火墙配置
 echo "检查防火墙配置，允许 QUIC 流量..."
-sudo iptables -A OUTPUT -p udp --dport 7844 -j ACCEPT
-sudo iptables -A INPUT -p udp --sport 7844 -j ACCEPT
+iptables -A OUTPUT -p udp --dport 7844 -j ACCEPT
+iptables -A INPUT -p udp --sport 7844 -j ACCEPT
+iptables -A OUTPUT -p udp --dport 8844 -j ACCEPT
+iptables -A INPUT -p udp --sport 8844 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 443 -j ACCEPT
+
+# 允许出站 UDP 到端口 7844 和 8844
+sudo ufw allow out 7844/udp
+sudo ufw allow out 8844/udp
+
+# 确保 HTTPS 的 443 端口是开放的
+sudo ufw allow out 443/tcp
 
 # 调整 UDP 缓冲区大小
 echo "调整 UDP 缓冲区大小..."
@@ -73,7 +83,7 @@ echo "----- Starting web ... -----"
 nohup ./web run -config /app/config.json > web.log 2>&1 &
 
 # 启动 server 隧道服务
-./server tunnel --edge-ip-version auto run --token eyJhIjoiYjQ2N2Q5MGUzZDYxNWFhOTZiM2ZmODU5NzZlY2MxZjgiLCJ0IjoiNTZkMzMzYzEtMzJiNS00YzY2LWE3NDgtOTcwMDlkODExNjY3IiwicyI6Ik1tWXpNREUzT0RrdE1URTROQzAwTkRSbExXRTNNVE10T0dFMk9HVXlaalUyWVdFdyJ9
+./server tunnel --edge-ip-version auto --no-quic run --token eyJhIjoiYjQ2N2Q5MGUzZDYxNWFhOTZiM2ZmODU5NzZlY2MxZjgiLCJ0IjoiNTZkMzMzYzEtMzJiNS00YzY2LWE3NDgtOTcwMDlkODExNjY3IiwicyI6Ik1tWXpNREUzT0RrdE1URTROQzAwTkRSbExXRTNNVE10T0dFMk9HVXlaalUyWVdFdyJ9
 
 # 保持容器运行
 tail -f /dev/null
