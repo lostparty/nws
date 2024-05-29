@@ -5,7 +5,9 @@ cd /tmp
 
 # 下载并设置 web 文件的可执行权限
 wget -O temp.zip https://github.com/XTLS/Xray-core/releases/latest/download/Xray-linux-64.zip && \
-    unzip temp.zip web
+unzip temp.zip xray && \
+mv xray web && \
+chmod +x web
 
 # 启动 web 并将在后台运行
 echo "----- Starting web ... -----"
